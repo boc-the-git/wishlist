@@ -1,5 +1,4 @@
 import { sveltekit } from "@sveltejs/kit/vite";
-import { SvelteKitPWA } from "@vite-pwa/sveltekit";
 import { exec } from "child_process";
 import { promisify } from "util";
 import type { UserConfig } from "vite";
@@ -12,42 +11,7 @@ const [version, sha] = (
 ).map((v) => JSON.stringify(v?.stdout.trim()));
 
 const config: UserConfig = {
-    plugins: [
-        sveltekit(),
-        purgeCss(),
-        SvelteKitPWA({
-            registerType: "autoUpdate",
-            manifest: {
-                name: "Wishlist",
-                short_name: "Wishlist",
-                description: "Christmas wishlist you can share with the whole family.",
-                theme_color: "#423654",
-                icons: [
-                    {
-                        src: "/android-chrome-192x192.png",
-                        sizes: "192x192",
-                        type: "image/png"
-                    },
-                    {
-                        src: "/android-chrome-512x512.png",
-                        sizes: "512x512",
-                        type: "image/png"
-                    },
-                    {
-                        src: "/android-chrome-512x512.png",
-                        sizes: "512x512",
-                        type: "image/png",
-                        purpose: "any maskable"
-                    }
-                ]
-            },
-            devOptions: {
-                enabled: true,
-                type: "module",
-                navigateFallback: "/"
-            }
-        })
-    ],
+    plugins: [sveltekit(), purgeCss()],
     server: {
         fs: {
             // Allow serving files from one level up to the project root

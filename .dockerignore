@@ -4,8 +4,15 @@ node_modules/
 .eslint*
 .prettier*
 README.md
+.vscode
+.github
 
 templates/*.mjml
 uploads/
 data/
-prisma/dev.db
+prisma/*.db*
+.env*
+.eslint*
+.gitignore
+.prettier*
+docker-compose.yaml
