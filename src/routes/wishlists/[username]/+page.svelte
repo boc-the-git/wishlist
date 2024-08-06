@@ -1,3 +1,5 @@
+<svelte:options runes={true} />
+
 <script lang="ts">
     import type { PageData } from "./$types";
     import ItemCard from "$lib/components/wishlists/ItemCard/ItemCard.svelte";
@@ -16,11 +18,11 @@
     import { PublicListAPI } from "$lib/api/lists";
     import TokenCopy from "$lib/components/TokenCopy.svelte";
 
-    export let data: PageData;
+    let { data }: { data: PageData } = $props();
     type Item = PageData["items"][0];
-    $: allItems = data.items;
-    $: approvals = allItems.filter((item) => !item.approved);
-    $: items = allItems.filter((item) => item.approved);
+
+    let approvals = $derived(data.items.filter((item) => !item.approved));
+    let items = $derived(data.items.filter((item) => item.approved));
 
     const [send, receive] = crossfade({
         duration: (d) => Math.sqrt(d * 200),
@@ -49,7 +51,7 @@
 
     const updateHash = async () => {
         const userHash = await hash(data.listOwner.id + data.groupId);
-        $viewedItems[userHash] = await hashItems(allItems);
+        $viewedItems[userHash] = await hashItems(data.items);
     };
 
     const subscribeToEvents = () => {
@@ -73,10 +75,10 @@
 
     const updateItems = (updatedItem: Item) => {
         // for when an item gets approved
-        if (!allItems.find((item) => item.id === updatedItem.id)) {
+        if (!data.items.find((item) => item.id === updatedItem.id)) {
             addItem(updatedItem);
         }
-        allItems = allItems.map((item) => {
+        data.items = data.items.map((item) => {
             if (item.id === updatedItem.id) {
                 return { ...item, ...updatedItem };
             }
@@ -85,17 +87,17 @@
     };
 
     const removeItem = (removedItem: Item) => {
-        allItems = allItems.filter((item) => item.id !== removedItem.id);
+        data.items = data.items.filter((item) => item.id !== removedItem.id);
     };
 
     const addItem = (addedItem: Item) => {
         if (!(addedItem.approved || data.listOwner.isMe)) {
             return;
         }
-        allItems = [...allItems, addedItem];
+        data.items = [...data.items, addedItem];
     };
 
-    let publicListUrl: URL;
+    let publicListUrl: URL | undefined = $state();
     const getOrCreatePublicList = async () => {
         let publicListId = "";
         const publicListApi = new PublicListAPI(data.groupId);
@@ -113,7 +115,7 @@
 </script>
 
 <!-- chips -->
-{#if allItems.length > 0}
+{#if data.items.length > 0}
     <div class="flex flex-row flex-wrap space-x-4">
         {#if !data.listOwner.isMe}
             <ClaimFilterChip />
@@ -129,7 +131,7 @@
                 <TokenCopy btnStyle="btn-icon-sm" url={publicListUrl?.href}>Public URL</TokenCopy>
             </div>
         {:else}
-            <button class="variant-ringed-surface btn btn-sm" on:click={getOrCreatePublicList}>Share List</button>
+            <button class="variant-ringed-surface btn btn-sm" onclick={getOrCreatePublicList}>Share List</button>
         {/if}
     </div>
 {/if}
@@ -188,7 +190,7 @@
         class="z-90 variant-ghost-surface btn fixed right-4 h-16 w-16 rounded-full md:bottom-10 md:right-10 md:h-20 md:w-20"
         class:bottom-24={$isInstalled}
         class:bottom-4={!$isInstalled}
-        on:click={() => goto(`${$page.url}/new`)}
+        onclick={() => goto(`${$page.url}/new`)}
     >
         <iconify-icon height="32" icon="ion:add" width="32" />
     </button>

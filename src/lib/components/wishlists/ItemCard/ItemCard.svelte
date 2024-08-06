@@ -1,3 +1,5 @@
+<svelte:options runes={true} />
+
 <script context="module" lang="ts">
     export type PartialUser = {
         username: string;
@@ -29,27 +31,32 @@
     import ClaimButtons from "./ClaimButtons.svelte";
     import { invalidateAll } from "$app/navigation";
 
-    export let item: FullItem;
-    export let user: (PartialUser & { id: string }) | undefined = undefined;
-    export let showClaimedName = false;
-    export let showFor = false;
-    export let onPublicList = false;
+    interface Props {
+        item: FullItem;
+        user: (PartialUser & { id: string }) | undefined;
+        showClaimedName: boolean;
+        showFor?: boolean;
+        onPublicList?: boolean;
+    }
+    let { item, user, showClaimedName, showFor = false, onPublicList = false }: Props = $props();
 
     const modalStore = getModalStore();
     const toastStore = getToastStore();
     const drawerStore = getDrawerStore();
 
-    let imageUrl: string;
-    const itemAPI = new ItemAPI(item.id);
-
-    $: if (item.imageUrl) {
-        try {
-            new URL(item.imageUrl);
-            imageUrl = item.imageUrl;
-        } catch {
-            imageUrl = `/api/assets/${item.imageUrl}`;
+    let imageUrl: string | null = $derived.by(() => {
+        if (item.imageUrl) {
+            try {
+                new URL(item.imageUrl);
+                return item.imageUrl;
+            } catch {
+                return `/api/assets/${item.imageUrl}`;
+            }
         }
-    }
+        return null;
+    });
+
+    const itemAPI = new ItemAPI(item.id);
 
     const triggerErrorToast = () => {
         toastStore.trigger({
@@ -168,20 +175,14 @@
 <button
     class="card card-hover block w-full text-start"
     class:variant-ghost-warning={!item.approved}
+    onclick={() => drawerStore.open(drawerSettings)}
     type="button"
-    on:click={() => drawerStore.open(drawerSettings)}
 >
     <header class="card-header">
         <div class="flex w-full">
             <span class="line-clamp-2 text-xl font-bold md:text-2xl">
                 {#if item.url}
-                    <a
-                        class="dark:!text-primary-200"
-                        href={item.url}
-                        rel="noreferrer"
-                        target="_blank"
-                        on:click|stopPropagation
-                    >
+                    <a class="dark:!text-primary-200" href={item.url} rel="noreferrer" target="_blank">
                         {item.name}
                     </a>
                 {:else}
@@ -216,19 +217,19 @@
         <ClaimButtons
             {item}
             {onPublicList}
+            onclaim={handleClaim}
+            onpurchase={handlePurchased}
+            onunclaim={() => handleClaim(true)}
             showName={showClaimedName}
             {user}
-            on:claim={() => handleClaim()}
-            on:unclaim={() => handleClaim(true)}
-            on:purchase={(event) => handlePurchased(event.detail.purchased)}
         />
 
         <ApprovalButtons
             {item}
+            onapprove={() => handleApproval(true)}
+            ondelete={handleDelete}
+            ondeny={() => handleApproval(false)}
             {user}
-            on:approve={() => handleApproval(true)}
-            on:deny={() => handleApproval(false)}
-            on:delete={handleDelete}
         />
     </footer>
 </button>
