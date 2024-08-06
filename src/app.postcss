@@ -105,7 +105,7 @@
 
 html,
 body {
-    @apply h-full overflow-hidden;
+    @apply h-full;
 }
 
 a:not(.unstyled):is(:not(.prose *)):not(.btn):not(.btn-icon):not(.app-bar a):not(.logo-item):not(a.card):not(
@@ -117,10 +117,3 @@ a:not(.unstyled):is(:not(.prose *)):not(.btn):not(.btn-icon):not(.app-bar a):not
 label:not(.unstyled) {
     @apply space-y-2;
 }
-
-/*! purgecss start ignore */
-.ptr--icon,
-.ptr--text {
-    @apply text-primary-900 dark:text-primary-50;
-}
-/*! purgecss end ignore */
