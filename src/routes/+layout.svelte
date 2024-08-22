@@ -17,6 +17,8 @@
     import { navItems } from "$lib/components/navigation/navigation";
     import Drawer from "$lib/components/Drawer.svelte";
     import CreateSystemUser from "$lib/components/modals/CreateSystemUser.svelte";
+    import PullToRefresh from "pulltorefreshjs";
+    import { onMount } from "svelte";
 
     export let data: LayoutData;
 
@@ -45,6 +47,23 @@
         disabled = titleDisabledUrls.find((url) => $page.url.pathname.match(url)) !== undefined;
     });
 
+    onMount(() => {
+        $isInstalled = true;
+        if (window.matchMedia("(display-mode: standalone)").matches) {
+            $isInstalled = true;
+
+            const ptr = PullToRefresh.init({
+                mainElement: document.getElementById("main") as unknown as string,
+                distThreshold: 70,
+                resistanceFunction: (t) => Math.min(1, t / 4.5),
+                onRefresh() {
+                    window.location.reload();
+                }
+            });
+            return () => ptr.destroy();
+        }
+    });
+
     initializeStores();
 
     storePopup.set({ computePosition, autoUpdate, flip, shift, offset, arrow });
@@ -67,7 +86,7 @@
 
 <Drawer />
 
-<div class="flex h-full w-full flex-col">
+<div class="flex h-screen w-full flex-col">
     <header class="sticky top-0 z-10">
         {#if showNavigationLoadingBar}
             <NavigationLoadingBar />
@@ -80,10 +99,10 @@
         {/if}
         <slot />
     </main>
-    <footer>
+    <footer class="sticky bottom-0 z-10">
         <BottomTabs {navItems} user={data.user} />
     </footer>
 </div>
 
 <Toast />
-<Modal components={modalComponentRegistry} />
+<Modal components={modalComponentRegistry} />false
